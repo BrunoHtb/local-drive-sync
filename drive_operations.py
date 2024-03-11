@@ -68,6 +68,34 @@ def get_id_folder(service, folder_name):
     else:
         return None
 
+def get_name_folder(service, folder_id):
+    response = service.files().get(fileId=folder_id, fields="name").execute()
+    return response.get("name", None)
+
+def list_folder_parent(services, id_folder_parent):
+    if id_folder_parent:
+        response = services.files().list(
+            q=f"'{id_folder_parent}' in parents",
+            spaces="drive",
+            fields="files(id, name)"
+        ).execute()
+
+        folders = response.get("files", [])
+        folder_ids = [folder["id"] for folder in folders]
+
+        return folder_ids
+    else:
+        return None
+
+def list_folder(service, id_folder):
+    response = service.files().list(
+        q=f"'{id_folder}' in parents and mimeType='application/vnd.google-apps.folder'",
+        spaces="drive",
+        fields="nextPageToken, files(id, name)"
+    ).execute()
+
+    subdirectories = response.get("files", [])
+    return subdirectories
 
 def list_file_in_folder(service, id_folder):
     response = service.files().list(
