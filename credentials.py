@@ -9,22 +9,33 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def check_credentials():
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-        
+    token_path = "token.json"
+    client_secret_path = "client_secret.json"
+
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except HttpError as error:
+                print(f"Failed to refresh token: {error}")
+                os.remove(token_path)
+                creds = None
         else:
+            if os.path.exists(token_path):
+                os.remove(token_path)
             flow = InstalledAppFlow.from_client_secrets_file(
-            "credentials.json", SCOPES
-            )     
+                client_secret_path, SCOPES
+            )
             creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
+        with open(token_path, "w") as token:
             token.write(creds.to_json())
-    
+
     try:
         service = build("drive", "v3", credentials=creds)
+        return service
     except HttpError as error:
         print(f"An error occurred: {error}")
-    return service
+        return None
