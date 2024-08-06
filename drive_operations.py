@@ -1,30 +1,50 @@
 import os
+import time
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 
+import local_operations as local_operation
 
-def download_file(service, file_id, folder_target, drive_folder_name):
+def download_file(service, file_id, folder_target, drive_folder_name, downloaded_files, downloaded_files_txt):
     file_info = service.files().get(fileId=file_id, fields="name, mimeType, size").execute()
     file_name = file_info['name']
     file_size = int(file_info.get('size', 0))
+
+    # Verifica se tá na lista de baixados
+    if file_name in downloaded_files:
+        print(f"O arquivo {file_name} já foi baixado anteriormente. Pulando o download.")
+        return
     
     if 'application/vnd.google-apps.folder' not in file_info['mimeType']:
         request = service.files().get_media(fileId=file_id)
 
+        # Verifica se já existe
         if os.path.exists(folder_target):
             local_file_size = os.path.getsize(folder_target)
             if local_file_size == file_size:
                 print(f"O arquivo {folder_target} já existe e não está corrompido. Pulando o download.")
+                local_operation.add_downloaded_file(downloaded_files_txt, file_name)
                 return
             else:
                 print(f"O arquivo {folder_target} está corrompido. Baixando novamente.")
 
+        # Baixa arquivo
         with open(folder_target, 'wb') as f:
             downloader = MediaIoBaseDownload(f, request)
             done = False
+            last_print_time = time.time()
             while not done:
-                status, done = downloader.next_chunk()
-                print(f"\rProgresso do download {drive_folder_name} - {file_name}: {int(status.progress() * 100)}%", end='')
+                try:
+                    status, done = downloader.next_chunk()
+                    current_time = time.time()
+                    if current_time - last_print_time >= 0.3:
+                        print(f"\rProgresso do download {drive_folder_name} - {file_name}: {int(status.progress() * 100)}%", end='')
+                        last_print_time = current_time
+                except Exception as exc:
+                    print(f"An error occurred: {exc}")
+                    return
+            print(f"\rProgresso do download {file_name}: 100%", end='')
             print()
+            local_operation.add_downloaded_file(downloaded_files_txt, file_name)
     else:
         print(f'O item {folder_target} é um diretório. Pulando o download.')
 
