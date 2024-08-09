@@ -1,4 +1,5 @@
 import os.path
+import time
 import configparser
 from googleapiclient.errors import HttpError
 
@@ -42,7 +43,6 @@ def download_folder_ok(service, id_folder_search, local_full_path, drive_folder_
                 drive_operation.download_file(service, file.get("id"), folder_target, drive_folder_name, downloaded_files, downloaded_files_txt)
 
 
-
 def run_folders_children(service, list_id_folder_in_parent):
   for id_folder in list_id_folder_in_parent:
     folder_name = drive_operation.get_name_folder(service, id_folder)
@@ -55,17 +55,19 @@ def run_folders_children(service, list_id_folder_in_parent):
 
 
 def main():
-  try:
-    service = credential.check_credentials()
+    while True:
+        try:
+            service = credential.check_credentials()
 
-    id_folder_parent = drive_operation.get_id_folder(service, drive_folder_name_main)
-    list_id_folder_in_parent = drive_operation.list_folder_parent(service, id_folder_parent)   
-    run_folders_children(service, list_id_folder_in_parent)
+            id_folder_parent = drive_operation.get_id_folder(service, drive_folder_name_main)
+            list_id_folder_in_parent = drive_operation.list_folder_parent(service, id_folder_parent)
+            run_folders_children(service, list_id_folder_in_parent)
 
-    input("PAROU AQUI")
+            time.sleep(7200)
 
-  except HttpError as error:
-    print(f"An error occurred: {error}")
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            time.sleep(15)
 
 
 if __name__ == "__main__":

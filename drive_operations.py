@@ -4,12 +4,12 @@ from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 
 import local_operations as local_operation
 
-def download_file(service, file_id, folder_target, drive_folder_name, downloaded_files, downloaded_files_txt):
+
+def download_file(service, file_id, folder_target, drive_folder_name, downloaded_files, downloaded_files_txt, retries=5):
     file_info = service.files().get(fileId=file_id, fields="name, mimeType, size").execute()
     file_name = file_info['name']
     file_size = int(file_info.get('size', 0))
 
-    # Verifica se tá na lista de baixados
     if file_name in downloaded_files:
         print(f"O arquivo {file_name} já foi baixado anteriormente. Pulando o download.")
         return
@@ -17,7 +17,7 @@ def download_file(service, file_id, folder_target, drive_folder_name, downloaded
     if 'application/vnd.google-apps.folder' not in file_info['mimeType']:
         request = service.files().get_media(fileId=file_id)
 
-        # Verifica se já existe
+        # Verificar se o arquivo já existe e comparar tamanhos
         if os.path.exists(folder_target):
             local_file_size = os.path.getsize(folder_target)
             if local_file_size == file_size:
@@ -27,24 +27,31 @@ def download_file(service, file_id, folder_target, drive_folder_name, downloaded
             else:
                 print(f"O arquivo {folder_target} está corrompido. Baixando novamente.")
 
-        # Baixa arquivo
-        with open(folder_target, 'wb') as f:
-            downloader = MediaIoBaseDownload(f, request)
-            done = False
-            last_print_time = time.time()
-            while not done:
-                try:
-                    status, done = downloader.next_chunk()
-                    current_time = time.time()
-                    if current_time - last_print_time >= 0.3:
-                        print(f"\rProgresso do download {drive_folder_name} - {file_name}: {int(status.progress() * 100)}%", end='')
-                        last_print_time = current_time
-                except Exception as exc:
-                    print(f"An error occurred: {exc}")
-                    return
-            print(f"\rProgresso do download {file_name}: 100%", end='')
-            print()
-            local_operation.add_downloaded_file(downloaded_files_txt, file_name)
+        attempt = 0
+        while attempt < retries:
+            try:
+                with open(folder_target, 'wb') as f:
+                    downloader = MediaIoBaseDownload(f, request)  # Usando tamanho de chunk padrão
+                    done = False
+                    last_print_time = time.time()
+                    while not done:
+                        status, done = downloader.next_chunk()
+                        current_time = time.time()
+                        # Atualiza a cada 0.5 segundos
+                        if current_time - last_print_time >= 0.5:
+                            print(f"\rProgresso do download {file_name}: {int(status.progress() * 100)}%", end='')
+                            last_print_time = current_time
+                    # Garantir que o progresso final seja exibido como 100%
+                    print(f"\rProgresso do download {drive_folder_name} - {file_name}: 100%", end='')
+                    print()
+                    local_operation.add_downloaded_file(downloaded_files_txt, file_name)
+                break  
+            except Exception as exc:
+                attempt += 1
+                print(f"Erro ao baixar {file_name}: {exc}. Tentativa {attempt} de {retries}.")
+                time.sleep(10)  
+                if attempt == retries:
+                    print(f"Falha ao baixar o arquivo {file_name} após {retries} tentativas. Pulando o arquivo.")
     else:
         print(f'O item {folder_target} é um diretório. Pulando o download.')
 
