@@ -32,8 +32,14 @@ def download_folder_ok(service, id_folder_search, local_full_path, drive_folder_
     if not drive_folder_ok:
         print(f"No folders found in the directory with ID {id_folder_search}")
         return
+    
+    folder_ok = None
+    for folder in drive_folder_ok:
+        if folder['name'] == "OK":
+            folder_ok = folder
+            break
 
-    if drive_folder_ok[0]['name'] == "OK":
+    if folder_ok:
         file_in_folder = drive_operation.list_file_in_folder(service, drive_folder_ok[0]['id'])
         if file_in_folder:
             local_full_path = local_operation.verify_folder_exist(local_full_path, "OK")
