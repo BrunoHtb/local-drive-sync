@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 
 import local_operations as local_operation
@@ -30,6 +31,8 @@ def download_file(service, file_id, folder_target, drive_folder_name, downloaded
         attempt = 0
         while attempt < retries:
             try:
+                download_start_time = datetime.now().strftime("%H:%M:%S")
+
                 with open(folder_target, 'wb') as f:
                     downloader = MediaIoBaseDownload(f, request)  # Usando tamanho de chunk padrão
                     done = False
@@ -39,10 +42,10 @@ def download_file(service, file_id, folder_target, drive_folder_name, downloaded
                         current_time = time.time()
                         # Atualiza a cada 0.5 segundos
                         if current_time - last_print_time >= 0.5:
-                            print(f"\rProgresso do download {file_name}: {int(status.progress() * 100)}%", end='')
+                            print(f"\r[{download_start_time}] Progresso do download {file_name}: {int(status.progress() * 100)}%", end='')
                             last_print_time = current_time
                     # Garantir que o progresso final seja exibido como 100%
-                    print(f"\rProgresso do download {drive_folder_name} - {file_name}: 100%", end='')
+                    print(f"\r[{download_start_time}] Progresso do download {drive_folder_name} - {file_name}: 100%", end='')
                     print()
                     local_operation.add_downloaded_file(downloaded_files_txt, file_name)
                 break  

@@ -21,9 +21,9 @@ downloaded_files_txt = 'downloaded_files.txt'
 
 
 def upload_folder_user(service, id_folder_search, local_full_path_user):
-  local_files = local_operation.verify_new_file_local(local_full_path_user)
-  for local_file in local_files:
-      drive_operation.upload_file(service, local_file, id_folder_search)
+    local_files = local_operation.verify_new_file_local(local_full_path_user)
+    for local_file in local_files:
+        drive_operation.upload_file(service, local_file, id_folder_search)
 
 
 def download_folder_ok(service, id_folder_search, local_full_path, drive_folder_name):
@@ -40,7 +40,7 @@ def download_folder_ok(service, id_folder_search, local_full_path, drive_folder_
             break
 
     if folder_ok:
-        file_in_folder = drive_operation.list_file_in_folder(service, drive_folder_ok[0]['id'])
+        file_in_folder = drive_operation.list_file_in_folder(service, folder_ok['id'])
         if file_in_folder:
             local_full_path = local_operation.verify_folder_exist(local_full_path, "OK")
             downloaded_files = local_operation.load_downloaded_files(downloaded_files_txt)
@@ -50,14 +50,14 @@ def download_folder_ok(service, id_folder_search, local_full_path, drive_folder_
 
 
 def run_folders_children(service, list_id_folder_in_parent):
-  for id_folder in list_id_folder_in_parent:
-    folder_name = drive_operation.get_name_folder(service, id_folder)
-    local_full_path_user = local_operation.verify_folder_exist(local_folder_path, folder_name)
-    id_folder_search = drive_operation.get_id_folder(service, folder_name)
-    print(f"Nome do diretorio: {folder_name}")
+    for id_folder in list_id_folder_in_parent:
+        folder_name = drive_operation.get_name_folder(service, id_folder)
+        local_full_path_user = local_operation.verify_folder_exist(local_folder_path, folder_name)
+        id_folder_search = drive_operation.get_id_folder(service, folder_name)
+        print(f"Nome do diretorio: {folder_name}")
 
-    download_folder_ok(service, id_folder_search, local_full_path_user, folder_name)
-    #upload_folder_user(service, id_folder_search, local_full_path_user)
+        download_folder_ok(service, id_folder_search, local_full_path_user, folder_name)
+        #upload_folder_user(service, id_folder_search, local_full_path_user)
 
 
 def main():
@@ -77,4 +77,4 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+    main()
