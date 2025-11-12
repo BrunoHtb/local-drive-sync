@@ -94,18 +94,16 @@ def delete_file(service, folder_id, file_name):
             print(f"Arquivo '{file_name}' excluído do Google Drive.")
 
 
-def get_id_folder(service, folder_name):
-    response = service.files().list(
-        q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}'",
-        spaces="drive",
-        fields="files(id, name)"
-    ).execute()
+def get_id_folder(service, folder_name, parent_id=None):
+    # Restringe por pasta + não-lixeira + (opcional) pai específico
+    q = "mimeType='application/vnd.google-apps.folder' and trashed=false and name='{0}'".format(folder_name)
+    if parent_id:
+        q += " and '{0}' in parents".format(parent_id)
 
-    folders = response.get("files", [])
-    if folders:
-        return folders[0]["id"]
-    else:
-        return None
+    resp = service.files().list(q=q, spaces="drive", fields="files(id,name)").execute()
+    folders = resp.get("files", [])
+    return folders[0]["id"] if folders else None
+
 
 
 def get_name_folder(service, folder_id):
@@ -113,20 +111,15 @@ def get_name_folder(service, folder_id):
     return response.get("name", None)
 
 
-def list_folder_parent(services, id_folder_parent):
-    if id_folder_parent:
-        response = services.files().list(
-            q=f"'{id_folder_parent}' in parents",
-            spaces="drive",
-            fields="files(id, name)"
-        ).execute()
-
-        folders = response.get("files", [])
-        folder_ids = [folder["id"] for folder in folders]
-
-        return folder_ids
-    else:
-        return None
+def list_folder_parent(service, id_folder_parent):
+    if not id_folder_parent:
+        return []
+    resp = service.files().list(
+        q="'{0}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false".format(id_folder_parent),
+        spaces="drive",
+        fields="files(id,name)"
+    ).execute()
+    return [f["id"] for f in resp.get("files", [])]
 
 
 def list_folder(service, folder_id):
