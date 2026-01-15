@@ -1,8 +1,23 @@
+# secrets / auth
 token.json
-credentials.json
-__pycache__/
-build/
 client_secret.json
+credentials.json
+config.ini
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# logs 
+*.txt
+
+# .exe
+build/
 dist/
 main.spec
-*.txt
+
+# config
+config.ini
