@@ -23,34 +23,25 @@ com foco nos arquivos colocados dentro de uma subpasta **OK**.
 - Runs periodically (every 2 hours)
 
 ## Folder structure (example)
-
 ### Google Drive
 
+```
 NUVEM_DE_PONTOS/
-    Project_A/
-        OK/
-            file1.las
-            file2.tif
-    Project_B/
-        OK/
-            file3.las
-
-shell
-Copy code
+├── Project_A/
+│   └── OK/
+│       ├── file1.las
+│       └── file2.tif
+```
 
 ### Local
 
+```
 E:/_TESTE_SYNC/
-    Project_A/
-        OK/
-            file1.las
-            file2.tif
-    Project_B/
-        OK/
-            file3.las
-            downloaded_files.txt
-
-
+├── Project_A/
+│   └── OK/
+│       ├── file1.las
+│       └── file2.tif
+```
 ## Setup
 
 ### 1) Credentials
